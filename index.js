@@ -1,50 +1,53 @@
-import { Hono } from 'hono'
-import { Database } from 'bun:sqlite'
+const express = require("express");
+const sqlite3 = require("sqlite3").verbose();
 
-// Abre la base de datos
-const db = new Database('./base.sqlite3')
+const app = express();
+app.use(express.json());
+
+// Base de datos
+const db = new sqlite3.Database("./base.sqlite3");
+
+// Crear tabla si no existe
 db.run(`CREATE TABLE IF NOT EXISTS todos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     todo TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)`)
+)`);
 
-const app = new Hono()
+// Ruta raíz
+app.get("/", (req, res) => {
+    res.json({ status: "ok" });
+});
 
-app.get('/', (c) => {
-    return c.json({ status: 'ok' })
-})
+// Login (dummy)
+app.post("/login", (req, res) => {
+    res.json({ status: "ok" });
+});
 
-app.post('/login', async (c) => {
-    return c.json({ status: 'ok' })
-})
-
-app.post('/insert', async (c) => {
-    let body
-    try {
-        body = await c.req.json()
-    } catch {
-        return c.json({ error: 'Falta información necesaria' }, 400)
-    }
-
-    const { todo } = body
+// Insertar datos
+app.post("/insert", (req, res) => {
+    const { todo } = req.body;
 
     if (!todo) {
-        return c.json({ error: 'Falta información necesaria' }, 400)
+        return res.status(400).json({ error: "Falta información necesaria" });
     }
 
-    try {
-        const stmt = db.prepare('INSERT INTO todos (todo) VALUES (?)')
-        const result = stmt.run(todo)
-        return c.json({ id: Number(result.lastInsertRowid), message: 'Insert was successful' }, 201)
-    } catch (err) {
-        return c.json({ error: err.message }, 500)
-    }
-})
+    const stmt = `INSERT INTO todos (todo) VALUES (?)`;
 
-export { app, db }
+    db.run(stmt, [todo], function (err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
 
-export default {
-    port: process.env.PORT || 3000,
-    fetch: app.fetch,
-}
+        return res.status(201).json({
+            id: this.lastID,
+            message: "Insert was successful"
+        });
+    });
+});
+
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
+});
