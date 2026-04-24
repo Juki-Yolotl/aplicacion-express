@@ -3,7 +3,6 @@
   "version": "1.1.0",
   "description": "",
   "module": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js",
     "test": "bun test"
