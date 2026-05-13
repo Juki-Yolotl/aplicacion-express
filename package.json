@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "hono": "^4.12.12"
+    "express": "^5.2.1",
+    "hono": "^4.12.12",
+    "sqlite3": "^6.0.1"
   }
 }
